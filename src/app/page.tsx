@@ -107,7 +107,7 @@ export default async function DashboardPage() {
                         {exotelLogs.map((log: WebhookLog) => (
                           <tr key={log.id} className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(log.createdAt).toLocaleString()}
+                              {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${log.status === 'success' ? 'bg-green-100 text-green-800' :
@@ -189,7 +189,7 @@ export default async function DashboardPage() {
                         {codaLogs.map((log: WebhookLog) => (
                           <tr key={log.id} className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(log.createdAt).toLocaleString()}
+                              {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${log.status === 'success' ? 'bg-green-100 text-green-800' :
@@ -271,7 +271,7 @@ export default async function DashboardPage() {
                         {codaTrialLogs.map((log: WebhookLog) => (
                           <tr key={log.id} className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(log.createdAt).toLocaleString()}
+                              {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${log.status === 'success' ? 'bg-green-100 text-green-800' :
