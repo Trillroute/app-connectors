@@ -22,6 +22,21 @@ export async function sendGallaboxMessage(templateName: string, recipientPhone: 
 
     const url = `https://server.gallabox.com/devapi/messages/whatsapp`;
 
+    const requestBody = {
+        channelId: channelId,
+        channelType: 'whatsapp',
+        recipient: {
+            phone: recipientPhone.replace('+', '')
+        },
+        whatsapp: {
+            type: 'template',
+            template: {
+                templateName: templateName,
+                ...templateData
+            }
+        }
+    };
+
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -30,32 +45,19 @@ export async function sendGallaboxMessage(templateName: string, recipientPhone: 
                 'apiSecret': gallaboxAccountId, // Depending on authentication setup
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                channelId: channelId,
-                channelType: 'whatsapp',
-                recipient: {
-                    phone: recipientPhone.replace('+', '')
-                },
-                whatsapp: {
-                    type: 'template',
-                    template: {
-                        templateName: templateName,
-                        ...templateData
-                    }
-                }
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Error sending Gallabox message:', errorText);
-            return { success: false, error: errorText };
+            return { success: false, error: errorText, payloadSent: requestBody };
         }
 
         const data = await response.json();
-        return { success: true, data };
+        return { success: true, data, payloadSent: requestBody };
     } catch (err: any) {
         console.error('Exception calling Gallabox API:', err);
-        return { success: false, error: err.message };
+        return { success: false, error: err.message, payloadSent: requestBody };
     }
 }

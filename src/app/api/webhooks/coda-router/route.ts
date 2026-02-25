@@ -78,11 +78,11 @@ export async function POST(request: Request) {
             const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, templateData);
 
             if (!gallaboxResult.success) {
-                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`);
+                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
                 return NextResponse.json({ success: false, error: gallaboxResult.error });
             }
 
-            await updateLog(logEntry.id, 'success', 'Gallabox Notification Sent');
+            await updateLog(logEntry.id, 'success', 'Gallabox Notification Sent', payload, gallaboxResult.payloadSent);
             return NextResponse.json({ success: true, message: 'Enquiry processed and WhatsApp sent' });
 
         } else if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') {
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
             const recipientName = parsedVariables.name || 'Student';
             const templateData = {
                 bodyValues: {
-                    "variable_1": recipientName,
+                    "name": recipientName,
                     "variable_2": parsedVariables.variable_2 || "",
                     "variable_3": parsedVariables.variable_3 || "",
                     "variable_4": parsedVariables.variable_4 || "",
@@ -110,11 +110,11 @@ export async function POST(request: Request) {
             const gallaboxResult = await sendGallaboxMessage(TRIAL_TEMPLATE, formattedNumber, templateData);
 
             if (!gallaboxResult.success) {
-                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`);
+                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
                 return NextResponse.json({ success: false, error: gallaboxResult.error });
             }
 
-            await updateLog(logEntry.id, 'success', 'Gallabox Trial Confirmation Sent');
+            await updateLog(logEntry.id, 'success', 'Gallabox Trial Confirmation Sent', payload, gallaboxResult.payloadSent);
             return NextResponse.json({ success: true, message: 'Trial Class processed and WhatsApp sent' });
 
         } else {
@@ -130,13 +130,22 @@ export async function POST(request: Request) {
     }
 }
 
-async function updateLog(id: string, status: string, errorOrAction: string) {
+async function updateLog(id: string, status: string, errorOrAction: string, incomingPayload?: any, outgoingPayload?: any) {
+    const dataToUpdate: any = {
+        status: status,
+        error: status === 'failed' ? errorOrAction : null,
+        action: status === 'success' ? errorOrAction : undefined
+    };
+
+    if (incomingPayload && outgoingPayload) {
+        dataToUpdate.payload = JSON.stringify({
+            INCOMING_WEBHOOK: incomingPayload,
+            OUTGOING_GALLABOX: outgoingPayload
+        }, null, 2);
+    }
+
     await prisma.webhookLog.update({
         where: { id },
-        data: {
-            status: status,
-            error: status === 'failed' ? errorOrAction : null,
-            action: status === 'success' ? errorOrAction : undefined
-        }
+        data: dataToUpdate
     });
 }
