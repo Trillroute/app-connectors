@@ -69,7 +69,7 @@ async function processExotelWebhook(payload: any) {
                 ]
             };
 
-            const gallaboxResult = await sendGallaboxMessage(MISSED_CALL_TEMPLATE, formattedNumber, templateData);
+            const gallaboxResult = await sendGallaboxMessage(MISSED_CALL_TEMPLATE, formattedNumber, "Customer", templateData);
 
             if (!gallaboxResult.success) {
                 actionErrors.push(`Gallabox Error: ${gallaboxResult.error}`);

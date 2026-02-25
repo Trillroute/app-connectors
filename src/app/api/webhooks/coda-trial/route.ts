@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
         // If the channel mapping differs, we override it here conceptually,
         // but sendGallaboxMessage will use default channel logic unless modified.
-        const gallaboxResult = await sendGallaboxMessage(TRIAL_TEMPLATE, formattedNumber, templateData);
+        const gallaboxResult = await sendGallaboxMessage(TRIAL_TEMPLATE, formattedNumber, recipientName, templateData);
 
         if (!gallaboxResult.success) {
             await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`);

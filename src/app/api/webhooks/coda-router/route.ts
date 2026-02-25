@@ -75,7 +75,7 @@ export async function POST(request: Request) {
                 buttonValues: []
             };
 
-            const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, templateData);
+            const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, recipientName, templateData);
 
             if (!gallaboxResult.success) {
                 await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
                 buttonValues: []
             };
 
-            const gallaboxResult = await sendGallaboxMessage(TRIAL_TEMPLATE, formattedNumber, templateData);
+            const gallaboxResult = await sendGallaboxMessage(TRIAL_TEMPLATE, formattedNumber, recipientName, templateData);
 
             if (!gallaboxResult.success) {
                 await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);

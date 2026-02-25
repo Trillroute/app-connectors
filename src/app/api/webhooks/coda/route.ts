@@ -60,7 +60,7 @@ export async function POST(request: Request) {
             buttonValues: [] // Empty if no buttons are needed, or could be mapped dynamically if needed
         };
 
-        const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, templateData);
+        const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, recipientName, templateData);
 
         if (!gallaboxResult.success) {
             await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`);

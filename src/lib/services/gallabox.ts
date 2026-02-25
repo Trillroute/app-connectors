@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { Settings } from '@prisma/client';
 
-export async function sendGallaboxMessage(templateName: string, recipientPhone: string, templateData: any = {}) {
+export async function sendGallaboxMessage(templateName: string, recipientPhone: string, recipientName: string = '', templateData: any = {}) {
     const settings = await prisma.settings.findMany({
         where: { key: { in: ['GALLABOX_API_KEY', 'GALLABOX_ACCOUNT_ID', 'GALLABOX_CHANNEL_ID'] } }
     });
@@ -26,6 +26,7 @@ export async function sendGallaboxMessage(templateName: string, recipientPhone: 
         channelId: channelId,
         channelType: 'whatsapp',
         recipient: {
+            name: recipientName,
             phone: recipientPhone.replace('+', '')
         },
         whatsapp: {
