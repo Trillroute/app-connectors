@@ -97,7 +97,7 @@ export async function POST(request: Request) {
             const recipientName = parsedVariables.name || 'Student';
             const templateData = {
                 bodyValues: {
-                    "name": recipientName,
+                    "variable_1": recipientName,
                     "variable_2": parsedVariables.variable_2 || "",
                     "variable_3": parsedVariables.variable_3 || "",
                     "variable_4": parsedVariables.variable_4 || "",
