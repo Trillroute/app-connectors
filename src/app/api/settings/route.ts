@@ -5,7 +5,7 @@ export async function GET() {
     try {
         const settings = await prisma.settings.findMany();
         // Convert array of {key, value} to an object {key: value}
-        const settingsObj = settings.reduce((acc, curr) => {
+        const settingsObj = settings.reduce((acc: Record<string, string>, curr) => {
             acc[curr.key] = curr.value;
             return acc;
         }, {} as Record<string, string>);
