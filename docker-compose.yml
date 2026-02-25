@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - app-data:/app/prisma/data
+
+volumes:
+  app-data:

@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL") // Recommended for Supabase
+}
+
+model WebhookLog {
+  id        String   @id @default(cuid())
+  source    String   // 'exotel', 'github', etc.
+  payload   String   // JSON stringified payload
+  action    String?  // Description of the action taken
+  status    String   // 'success', 'pending', 'failed'
+  error     String?  // Error message if any
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  key       String   @id // e.g., 'CODA_API_TOKEN'
+  value     String
+  updatedAt DateTime @updatedAt
+}
