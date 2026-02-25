@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     // Determine the source for UI logging backwards compatibility
     let source = `coda-router-${eventType}`;
     if (eventType === 'Enquiry') source = 'coda';
-    if (eventType === 'TrialBooking') source = 'coda-trial';
+    if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') source = 'coda-trial';
 
     // 1. Log webhook in SQLite Database instantly
     const logEntry = await prisma.webhookLog.create({
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
             await updateLog(logEntry.id, 'success', 'Gallabox Notification Sent');
             return NextResponse.json({ success: true, message: 'Enquiry processed and WhatsApp sent' });
 
-        } else if (eventType === 'TrialBooking') {
+        } else if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') {
             const TRIAL_TEMPLATE = settingsMap['GALLABOX_TRIAL_CLASS_TEMPLATE'] || 'trial_class_booking_confirmation_no_profile';
             const IS_ENABLED = settingsMap['AUTOMATION_TRIAL_CLASS_ENABLED'] !== 'false';
 
