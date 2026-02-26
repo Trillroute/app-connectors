@@ -3,7 +3,14 @@ import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
-    const tableIdentifier = searchParams.get('table'); // '?table=student' or '?table=schedule'
+    const rawTable = searchParams.get('table') || '';
+
+    let tableIdentifier = '';
+    if (rawTable.toLowerCase().includes('student') || rawTable.toLowerCase().includes('masterlist')) {
+        tableIdentifier = 'student';
+    } else if (rawTable.toLowerCase().includes('schedule') || rawTable.toLowerCase().includes('slot')) {
+        tableIdentifier = 'schedule';
+    }
 
     let payload;
     try {
