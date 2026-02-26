@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         if (tableIdentifier === 'student') {
             // Upsert Student Master Record
             const student = await prisma.studentMaster.upsert({
-                where: { codaRowId: payload.codaRowId },
+                where: { codaRowId: String(payload.codaRowId) },
                 update: {
                     studentName: payload.studentName,
                     whatsappContact: payload.whatsappContact || null,
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
                     dateOfBirth: payload.dateOfBirth || null,
                 },
                 create: {
-                    codaRowId: payload.codaRowId,
+                    codaRowId: String(payload.codaRowId),
                     studentName: payload.studentName || 'Unknown Student',
                     whatsappContact: payload.whatsappContact || null,
                     email: payload.email || null,
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 
             // Upsert Schedule Event Record
             const schedule = await prisma.scheduleEvent.upsert({
-                where: { codaRowId: payload.codaRowId },
+                where: { codaRowId: String(payload.codaRowId) },
                 update: {
                     day: payload.day || null,
                     timeSlot: payload.timeSlot || null,
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
                     studentId: studentId // Update relationship mapping if name changed
                 },
                 create: {
-                    codaRowId: payload.codaRowId,
+                    codaRowId: String(payload.codaRowId),
                     day: payload.day || null,
                     timeSlot: payload.timeSlot || null,
                     teacher: payload.teacher || null,
