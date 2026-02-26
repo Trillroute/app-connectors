@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL") // Recommended for Supabase
+  directUrl = env("DIRECT_URL")
 }
 
 model WebhookLog {
@@ -23,4 +23,46 @@ model Settings {
   key       String   @id // e.g., 'CODA_API_TOKEN'
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model StudentMaster {
+  id                  String          @id @default(cuid())
+  codaRowId           String          @unique // Native Coda ID for updates
+  studentName         String
+  whatsappContact     String?
+  email               String?
+  email2              String?
+  phone2              String?
+  parentName          String?
+  dateOfBirth         String?
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  
+  // Relation to Schedule Events
+  scheduleEvents      ScheduleEvent[]
+}
+
+model ScheduleEvent {
+  id                  String          @id @default(cuid())
+  codaRowId           String          @unique // Native Coda ID for updates
+  day                 String?
+  timeSlot            String?
+  teacher             String?
+  eventDate           DateTime?
+  eventStatus         String?
+  eventType           String?
+  instrument          String?
+  remark              String?
+  attendanceStatus    String?
+  attendanceReport    String?
+  courseCode          String?
+  phoneTrial          String?
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  // Relation binding it to the Student Master
+  studentId           String?
+  student             StudentMaster?  @relation(fields: [studentId], references: [id])
 }
