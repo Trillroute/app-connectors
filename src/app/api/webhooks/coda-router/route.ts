@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     let source = `coda-router-${eventType}`;
     if (eventType === 'Enquiry') source = 'coda';
     if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') source = 'coda-trial';
+    if (eventType === 'TrialReminder' || eventType === 'Trial Reminder') source = 'coda-trial-reminder';
 
     // 1. Log webhook in SQLite Database instantly
     const logEntry = await prisma.webhookLog.create({
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     try {
         // Fetch Configuration Settings for all possible Coda endpoints
         const settings = await prisma.settings.findMany({
-            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED'] } }
+            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'GALLABOX_TRIAL_REMINDER_TEMPLATE', 'AUTOMATION_TRIAL_REMINDER_ENABLED'] } }
         });
 
         const settingsMap = settings.reduce((acc: Record<string, string>, curr: { key: string; value: string }) => {
@@ -115,6 +116,34 @@ export async function POST(request: Request) {
 
             await updateLog(logEntry.id, 'success', 'Gallabox Trial Confirmation Sent', payload, gallaboxResult.payloadSent);
             return NextResponse.json({ success: true, message: 'Trial Class processed and WhatsApp sent' });
+
+        } else if (eventType === 'TrialReminder' || eventType === 'Trial Reminder') {
+            const REMINDER_TEMPLATE = settingsMap['GALLABOX_TRIAL_REMINDER_TEMPLATE'] || 'gentle_trial_reminder_tomorrow';
+            const IS_ENABLED = settingsMap['AUTOMATION_TRIAL_REMINDER_ENABLED'] !== 'false';
+
+            if (!IS_ENABLED) {
+                await updateLog(logEntry.id, 'success', 'Skipped - Automation Disabled');
+                return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
+            }
+
+            const recipientName = parsedVariables.name || 'Student';
+            const templateData: any = {
+                bodyValues: {
+                    "1": parsedVariables['1'] || parsedVariables.variable_1 || "",
+                    "2": parsedVariables['2'] || parsedVariables.variable_2 || "",
+                    "3": parsedVariables['3'] || parsedVariables.variable_3 || ""
+                }
+            };
+
+            const gallaboxResult = await sendGallaboxMessage(REMINDER_TEMPLATE, formattedNumber, recipientName, templateData);
+
+            if (!gallaboxResult.success) {
+                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
+                return NextResponse.json({ success: false, error: gallaboxResult.error });
+            }
+
+            await updateLog(logEntry.id, 'success', 'Gallabox Trial Reminder Sent', payload, gallaboxResult.payloadSent);
+            return NextResponse.json({ success: true, message: 'Trial Reminder processed and WhatsApp sent' });
 
         } else {
             // Future unhandled event types just gracefully sit in the DB
