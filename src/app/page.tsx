@@ -22,6 +22,7 @@ export default async function DashboardPage() {
   const exotelLogs = logs.filter(l => l.source === 'exotel');
   const codaLogs = logs.filter(l => l.source === 'coda');
   const codaTrialLogs = logs.filter(l => l.source === 'coda-trial');
+  const codaSyncDevLogs = logs.filter(l => l.source === 'coda-sync-dev');
 
   const settingsRecords = await prisma.settings.findMany({
     where: { key: { in: ['AUTOMATION_EXOTEL_ENABLED', 'AUTOMATION_CODA_ENABLED', 'AUTOMATION_TRIAL_CLASS_ENABLED'] } }
@@ -304,6 +305,57 @@ export default async function DashboardPage() {
                 )}
               </div>
             </div>
+
+            {/* DEV: Coda Sync Schema Inspector */}
+            {codaSyncDevLogs.length > 0 && (
+              <div className="bg-yellow-50 rounded-xl shadow-sm border border-yellow-200 overflow-hidden mt-8">
+                <div className="px-6 py-5 border-b border-yellow-200 flex items-center justify-between bg-yellow-100/50">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 bg-yellow-200 text-yellow-700 rounded-lg flex items-center justify-center font-bold text-lg">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-yellow-900">DEV: Coda Sync Schema Inspector</h3>
+                      <p className="text-sm text-yellow-700">Capturing raw row changes for Local Database building</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50/50">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-yellow-200">
+                      <thead className="bg-yellow-100/30">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-yellow-800 uppercase tracking-wider">Time</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-yellow-800 uppercase tracking-wider w-2/3">Raw JSON Schema</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-yellow-100">
+                        {codaSyncDevLogs.map((log: WebhookLog) => (
+                          <tr key={log.id} className="hover:bg-yellow-50/50 transition-colors duration-150 ease-in-out">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                              {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              <details className="group cursor-pointer" open>
+                                <summary className="text-yellow-600 hover:text-yellow-800 text-xs font-semibold uppercase tracking-wide list-none flex items-center">
+                                  <svg className="w-4 h-4 mr-1 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                  Inspect JSON
+                                </summary>
+                                <div className="mt-3 p-3 bg-gray-900 rounded-lg text-xs overflow-x-auto text-green-400 font-mono shadow-inner border border-gray-800">
+                                  <pre>{formatPayload(log.payload)}</pre>
+                                </div>
+                              </details>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </main>
       </div>
