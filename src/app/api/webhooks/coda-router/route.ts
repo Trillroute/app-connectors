@@ -16,10 +16,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Missing eventType in payload' }, { status: 400 });
     }
 
-    let parsedVariables: Record<string, any> = {};
+    let parsedVariables: Record<string, any> = { ...payload };
     if (payloadJson) {
         try {
-            parsedVariables = typeof payloadJson === 'string' ? JSON.parse(payloadJson) : payloadJson;
+            const parsed = typeof payloadJson === 'string' ? JSON.parse(payloadJson) : payloadJson;
+            parsedVariables = { ...parsedVariables, ...parsed };
         } catch (e) {
             return NextResponse.json({ success: false, error: 'Invalid payloadJson format' }, { status: 400 });
         }
@@ -68,11 +69,10 @@ export async function POST(request: Request) {
             }
 
             const recipientName = parsedVariables.name || 'Customer';
-            const templateData = {
+            const templateData: any = {
                 bodyValues: {
                     "variable_1": recipientName
-                },
-                buttonValues: []
+                }
             };
 
             const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, recipientName, templateData);
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
             }
 
             const recipientName = parsedVariables.name || 'Student';
-            const templateData = {
+            const templateData: any = {
                 bodyValues: {
                     "name": recipientName,
                     "variable_2": parsedVariables.variable_2 || "",
@@ -103,8 +103,7 @@ export async function POST(request: Request) {
                     "variable_4": parsedVariables.variable_4 || "",
                     "variable_5": parsedVariables.variable_5 || "",
                     "variable_6": parsedVariables.variable_6 || ""
-                },
-                buttonValues: []
+                }
             };
 
             const gallaboxResult = await sendGallaboxMessage(TRIAL_TEMPLATE, formattedNumber, recipientName, templateData);

@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         const recipientName = name || 'Student';
 
         // Ensure we pass the dynamic template exactly as the Gallabox structure dictates
-        const templateData = {
+        const templateData: any = {
             bodyValues: {
                 "name": recipientName,
                 "variable_2": variable_2 || "",
@@ -60,8 +60,7 @@ export async function POST(request: Request) {
                 "variable_4": variable_4 || "",
                 "variable_5": variable_5 || "",
                 "variable_6": variable_6 || ""
-            },
-            buttonValues: []
+            }
         };
 
         // If the channel mapping differs, we override it here conceptually,

@@ -53,11 +53,10 @@ export async function POST(request: Request) {
         const recipientName = name || 'Customer';
 
         // Use the same native Gallabox template format structure we discovered earlier
-        const templateData = {
+        const templateData: any = {
             bodyValues: {
                 "variable_1": recipientName
-            },
-            buttonValues: [] // Empty if no buttons are needed, or could be mapped dynamically if needed
+            }
         };
 
         const gallaboxResult = await sendGallaboxMessage(ENQUIRY_TEMPLATE, formattedNumber, recipientName, templateData);
