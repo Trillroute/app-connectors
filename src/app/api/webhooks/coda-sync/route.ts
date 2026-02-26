@@ -23,6 +23,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Missing codaRowId in payload' }, { status: 400 });
     }
 
+    // Prisma expects codaRowId to be a String, but Coda sends it as an Int.
+    payload.codaRowId = String(payload.codaRowId);
+
     try {
         if (tableIdentifier === 'student') {
             // Upsert Student Master Record
