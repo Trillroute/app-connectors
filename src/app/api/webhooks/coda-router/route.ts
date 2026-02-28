@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     if (eventType === 'Enquiry') source = 'coda';
     if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') source = 'coda-trial';
     if (eventType === 'AdmissionConfirmation') source = 'coda-admission';
+    if (eventType === 'PolicyOverview') source = 'coda-policy';
 
     // 1. Log webhook in SQLite Database instantly
     const logEntry = await prisma.webhookLog.create({
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     try {
         // Fetch Configuration Settings for all possible Coda endpoints
         const settings = await prisma.settings.findMany({
-            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'GALLABOX_ADMISSION_TEMPLATE', 'AUTOMATION_ADMISSION_ENABLED'] } }
+            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'GALLABOX_ADMISSION_TEMPLATE', 'AUTOMATION_ADMISSION_ENABLED', 'GALLABOX_POLICY_OVERVIEW_TEMPLATE', 'AUTOMATION_POLICY_OVERVIEW_ENABLED'] } }
         });
 
         const settingsMap = settings.reduce((acc: Record<string, string>, curr: { key: string; value: string }) => {
@@ -153,6 +154,39 @@ export async function POST(request: Request) {
 
             await updateLog(logEntry.id, 'success', 'Gallabox Admission Confirmation Sent', payload, gallaboxResult.payloadSent);
             return NextResponse.json({ success: true, message: 'Admission Confirmation processed and WhatsApp sent' });
+
+        } else if (eventType === 'PolicyOverview') {
+            const POLICY_TEMPLATE = settingsMap['GALLABOX_POLICY_OVERVIEW_TEMPLATE'] || 'policy_overview_for_admission';
+            const IS_ENABLED = settingsMap['AUTOMATION_POLICY_OVERVIEW_ENABLED'] !== 'false';
+
+            if (!IS_ENABLED) {
+                await updateLog(logEntry.id, 'success', 'Skipped - Automation Disabled');
+                return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
+            }
+
+            const flattenValue = (val: any) => Array.isArray(val) ? val.join(', ') : (val || '');
+
+            const recipientName = flattenValue(parsedVariables.name) || 'Student';
+            const templateData: any = {
+                bodyValues: {
+                    "variable_name": flattenValue(parsedVariables.variable_name || parsedVariables.name),
+                    "variable_plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
+                    "variable_reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
+                    "variable_cancellation": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
+                    "variable_holiday1": flattenValue(parsedVariables.variable_holiday1 || parsedVariables.holiday1),
+                    "variable_holiday2": flattenValue(parsedVariables.variable_holiday2 || parsedVariables.holiday2)
+                }
+            };
+
+            const gallaboxResult = await sendGallaboxMessage(POLICY_TEMPLATE, formattedNumber, recipientName, templateData);
+
+            if (!gallaboxResult.success) {
+                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
+                return NextResponse.json({ success: false, error: gallaboxResult.error });
+            }
+
+            await updateLog(logEntry.id, 'success', 'Gallabox Policy Overview Sent', payload, gallaboxResult.payloadSent);
+            return NextResponse.json({ success: true, message: 'Policy Overview processed and WhatsApp sent' });
 
         } else {
             // Future unhandled event types just gracefully sit in the DB
