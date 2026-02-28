@@ -61,6 +61,11 @@ export async function POST(request: Request) {
         const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
 
         // === ROUTING LOGIC ===
+        const flattenValue = (val: any) => {
+            const flat = Array.isArray(val) ? val.join(', ') : (val || '');
+            return flat.trim() === '' ? '\u200B' : flat;
+        };
+
         if (eventType === 'Enquiry') {
             const ENQUIRY_TEMPLATE = settingsMap['GALLABOX_ENQUIRY_TEMPLATE'] || 'new_enquiry_alert';
             const IS_ENABLED = settingsMap['AUTOMATION_CODA_ENABLED'] !== 'false';
@@ -126,9 +131,6 @@ export async function POST(request: Request) {
                 await updateLog(logEntry.id, 'success', 'Skipped - Automation Disabled');
                 return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
             }
-
-            const flattenValue = (val: any) => Array.isArray(val) ? val.join(', ') : (val || '');
-
             const recipientName = flattenValue(parsedVariables.name) || 'Student';
             const templateData: any = {
                 bodyValues: {
@@ -164,11 +166,15 @@ export async function POST(request: Request) {
                 return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
             }
 
-            const flattenValue = (val: any) => Array.isArray(val) ? val.join(', ') : (val || '');
-
             const recipientName = flattenValue(parsedVariables.name) || 'Student';
             const templateData: any = {
                 bodyValues: {
+                    "name": flattenValue(parsedVariables.variable_name || parsedVariables.name),
+                    "plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
+                    "reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
+                    "cancellation": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
+                    "holiday1": flattenValue(parsedVariables.variable_holiday1 || parsedVariables.holiday1),
+                    "holiday2": flattenValue(parsedVariables.variable_holiday2 || parsedVariables.holiday2),
                     "variable_name": flattenValue(parsedVariables.variable_name || parsedVariables.name),
                     "variable_plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
                     "variable_reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
