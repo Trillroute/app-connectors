@@ -126,24 +126,26 @@ export async function POST(request: Request) {
                 return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
             }
 
-            const recipientName = parsedVariables.name || 'Student';
+            const flattenValue = (val: any) => Array.isArray(val) ? val.join(', ') : (val || '');
+
+            const recipientName = flattenValue(parsedVariables.name) || 'Student';
             const templateData: any = {
                 bodyValues: {
-                    "1": parsedVariables["1"] || "",
-                    "2": parsedVariables["2"] || "",
-                    "3": parsedVariables["3"] || "",
-                    "4": parsedVariables["4"] || "",
-                    "5": parsedVariables["5"] || "",
-                    "6": parsedVariables["6"] || "",
-                    "7": parsedVariables["7"] || "",
-                    "8": parsedVariables["8"] || "",
-                    "9": parsedVariables["9"] || "",
-                    "10": parsedVariables["10"] || "",
-                    "11": parsedVariables["11"] || "",
-                    "12": parsedVariables["12"] || "",
-                    "13": parsedVariables["13"] || "",
-                    "14": parsedVariables["14"] || "",
-                    "15": parsedVariables["15"] || ""
+                    "1": flattenValue(parsedVariables["1"]),
+                    "2": flattenValue(parsedVariables["2"]),
+                    "3": flattenValue(parsedVariables["3"]),
+                    "4": flattenValue(parsedVariables["4"]),
+                    "5": flattenValue(parsedVariables["5"]),
+                    "6": flattenValue(parsedVariables["6"]),
+                    "7": flattenValue(parsedVariables["7"]),
+                    "8": flattenValue(parsedVariables["8"]),
+                    "9": flattenValue(parsedVariables["9"]),
+                    "10": flattenValue(parsedVariables["10"]),
+                    "11": flattenValue(parsedVariables["11"]),
+                    "12": flattenValue(parsedVariables["12"]),
+                    "13": flattenValue(parsedVariables["13"]),
+                    "14": flattenValue(parsedVariables["14"]),
+                    "15": flattenValue(parsedVariables["15"])
                 }
             };
 
