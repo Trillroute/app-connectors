@@ -169,12 +169,6 @@ export async function POST(request: Request) {
             const recipientName = flattenValue(parsedVariables.name) || 'Student';
             const templateData: any = {
                 bodyValues: {
-                    "name": flattenValue(parsedVariables.variable_name || parsedVariables.name),
-                    "plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
-                    "reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
-                    "cancellation": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
-                    "holiday1": flattenValue(parsedVariables.variable_holiday1 || parsedVariables.holiday1),
-                    "holiday2": flattenValue(parsedVariables.variable_holiday2 || parsedVariables.holiday2),
                     "variable_name": flattenValue(parsedVariables.variable_name || parsedVariables.name),
                     "variable_plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
                     "variable_reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
