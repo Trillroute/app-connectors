@@ -131,16 +131,16 @@ export async function POST(request: Request) {
             const recipientName = flattenValue(parsedVariables.name) || 'Student';
             const templateData: any = {
                 bodyValues: {
-                    "name": flattenValue(parsedVariables.name),
-                    "location": flattenValue(parsedVariables.location),
-                    "instrument": flattenValue(parsedVariables.instrument),
-                    "mode": flattenValue(parsedVariables.mode),
-                    "code": flattenValue(parsedVariables.code),
-                    "slot_a": flattenValue(parsedVariables.slot_a),
-                    "slot_b": flattenValue(parsedVariables.slot_b),
-                    "trainer": flattenValue(parsedVariables.trainer),
-                    "start_date": flattenValue(parsedVariables.start_date),
-                    "end_date": flattenValue(parsedVariables.end_date)
+                    "1": flattenValue(parsedVariables.name),
+                    "2": flattenValue(parsedVariables.location),
+                    "3": flattenValue(parsedVariables.instrument),
+                    "4": flattenValue(parsedVariables.mode),
+                    "5": flattenValue(parsedVariables.code),
+                    "6": flattenValue(parsedVariables.slot_a),
+                    "7": flattenValue(parsedVariables.slot_b),
+                    "8": flattenValue(parsedVariables.trainer),
+                    "9": flattenValue(parsedVariables.start_date),
+                    "10": flattenValue(parsedVariables.end_date)
                 }
             };
 
