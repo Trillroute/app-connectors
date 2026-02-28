@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     let source = `coda-router-${eventType}`;
     if (eventType === 'Enquiry') source = 'coda';
     if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') source = 'coda-trial';
+    if (eventType === 'AdmissionConfirmation') source = 'coda-admission';
 
     // 1. Log webhook in SQLite Database instantly
     const logEntry = await prisma.webhookLog.create({
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     try {
         // Fetch Configuration Settings for all possible Coda endpoints
         const settings = await prisma.settings.findMany({
-            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED'] } }
+            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'GALLABOX_ADMISSION_TEMPLATE', 'AUTOMATION_ADMISSION_ENABLED'] } }
         });
 
         const settingsMap = settings.reduce((acc: Record<string, string>, curr: { key: string; value: string }) => {
@@ -115,6 +116,46 @@ export async function POST(request: Request) {
 
             await updateLog(logEntry.id, 'success', 'Gallabox Trial Confirmation Sent', payload, gallaboxResult.payloadSent);
             return NextResponse.json({ success: true, message: 'Trial Class processed and WhatsApp sent' });
+
+        } else if (eventType === 'AdmissionConfirmation') {
+            const ADMISSION_TEMPLATE = settingsMap['GALLABOX_ADMISSION_TEMPLATE'] || 'admission_sales_tracker_v4';
+            const IS_ENABLED = settingsMap['AUTOMATION_ADMISSION_ENABLED'] !== 'false';
+
+            if (!IS_ENABLED) {
+                await updateLog(logEntry.id, 'success', 'Skipped - Automation Disabled');
+                return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
+            }
+
+            const recipientName = parsedVariables.name || 'Student';
+            const templateData: any = {
+                bodyValues: {
+                    "1": parsedVariables["1"] || "",
+                    "2": parsedVariables["2"] || "",
+                    "3": parsedVariables["3"] || "",
+                    "4": parsedVariables["4"] || "",
+                    "5": parsedVariables["5"] || "",
+                    "6": parsedVariables["6"] || "",
+                    "7": parsedVariables["7"] || "",
+                    "8": parsedVariables["8"] || "",
+                    "9": parsedVariables["9"] || "",
+                    "10": parsedVariables["10"] || "",
+                    "11": parsedVariables["11"] || "",
+                    "12": parsedVariables["12"] || "",
+                    "13": parsedVariables["13"] || "",
+                    "14": parsedVariables["14"] || "",
+                    "15": parsedVariables["15"] || ""
+                }
+            };
+
+            const gallaboxResult = await sendGallaboxMessage(ADMISSION_TEMPLATE, formattedNumber, recipientName, templateData);
+
+            if (!gallaboxResult.success) {
+                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
+                return NextResponse.json({ success: false, error: gallaboxResult.error });
+            }
+
+            await updateLog(logEntry.id, 'success', 'Gallabox Admission Confirmation Sent', payload, gallaboxResult.payloadSent);
+            return NextResponse.json({ success: true, message: 'Admission Confirmation processed and WhatsApp sent' });
 
         } else {
             // Future unhandled event types just gracefully sit in the DB
