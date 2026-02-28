@@ -169,12 +169,12 @@ export async function POST(request: Request) {
             const recipientName = flattenValue(parsedVariables.name) || 'Student';
             const templateData: any = {
                 bodyValues: {
-                    "variable_name": flattenValue(parsedVariables.variable_name || parsedVariables.name),
-                    "variable_plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
-                    "variable_reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
-                    "variable_cancellation": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
-                    "variable_holiday1": flattenValue(parsedVariables.variable_holiday1 || parsedVariables.holiday1),
-                    "variable_holiday2": flattenValue(parsedVariables.variable_holiday2 || parsedVariables.holiday2)
+                    "1": flattenValue(parsedVariables.variable_name || parsedVariables.name),
+                    "2": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
+                    "3": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
+                    "4": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
+                    "5": flattenValue(parsedVariables.variable_holiday1 || parsedVariables.holiday1),
+                    "6": flattenValue(parsedVariables.variable_holiday2 || parsedVariables.holiday2)
                 }
             };
 
