@@ -175,8 +175,9 @@ export async function POST(request: Request) {
                     "reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
                     "cancellation": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
                     "holiday": flattenValue(
-                        (parsedVariables.variable_holiday1 || parsedVariables.holiday1 || '') +
-                        (parsedVariables.variable_holiday2 || parsedVariables.holiday2 || '')
+                        parsedVariables.holiday || parsedVariables.variable_holiday ||
+                        ((parsedVariables.variable_holiday1 || parsedVariables.holiday1 || '') +
+                            (parsedVariables.variable_holiday2 || parsedVariables.holiday2 || ''))
                     )
                 }
             };
@@ -190,6 +191,34 @@ export async function POST(request: Request) {
 
             await updateLog(logEntry.id, 'success', 'Gallabox Policy Overview Sent', payload, gallaboxResult.payloadSent);
             return NextResponse.json({ success: true, message: 'Policy Overview processed and WhatsApp sent' });
+
+        } else if (eventType === 'NewAccount') {
+            await prisma.webhookLog.update({ where: { id: logEntry.id }, data: { source: 'coda-new-account' } });
+
+            const NEW_ACCOUNT_TEMPLATE = settingsMap['GALLABOX_NEW_ACCOUNT_TEMPLATE'] || 'new_account_created_createnextapp';
+            const IS_ENABLED = settingsMap['AUTOMATION_NEW_ACCOUNT_ENABLED'] !== 'false';
+
+            if (!IS_ENABLED) {
+                await updateLog(logEntry.id, 'success', 'Skipped - Automation Disabled');
+                return NextResponse.json({ success: true, message: 'Webhook skipped (Automation Disabled)' });
+            }
+
+            const recipientName = flattenValue(parsedVariables.name) || 'Customer';
+            const templateData: any = {
+                bodyValues: {
+                    "name": flattenValue(parsedVariables.name || parsedVariables.variable_name)
+                }
+            };
+
+            const gallaboxResult = await sendGallaboxMessage(NEW_ACCOUNT_TEMPLATE, formattedNumber, recipientName, templateData);
+
+            if (!gallaboxResult.success) {
+                await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
+                return NextResponse.json({ success: false, error: gallaboxResult.error });
+            }
+
+            await updateLog(logEntry.id, 'success', 'Gallabox New Account Notice Sent', payload, gallaboxResult.payloadSent);
+            return NextResponse.json({ success: true, message: 'New Account processed and WhatsApp sent' });
 
         } else {
             // Future unhandled event types just gracefully sit in the DB
