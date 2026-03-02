@@ -62,8 +62,9 @@ export async function POST(request: Request) {
 
         // === ROUTING LOGIC ===
         const flattenValue = (val: any) => {
-            const flat = Array.isArray(val) ? val.join(', ') : (val || '');
-            return flat.trim() === '' ? '\u200B' : flat;
+            const flat = Array.isArray(val) ? val.join(', ') : String(val || '');
+            const trimmed = flat.trim();
+            return trimmed === '' ? '\u200B' : trimmed;
         };
 
         if (eventType === 'Enquiry') {
