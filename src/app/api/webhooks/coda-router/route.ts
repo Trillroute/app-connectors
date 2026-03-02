@@ -174,8 +174,10 @@ export async function POST(request: Request) {
                     "plan": flattenValue(parsedVariables.variable_plan || parsedVariables.plan),
                     "reservation": flattenValue(parsedVariables.variable_reservation || parsedVariables.reservation),
                     "cancellation": flattenValue(parsedVariables.variable_cancellation || parsedVariables.cancellation),
-                    "holiday1": flattenValue(parsedVariables.variable_holiday1 || parsedVariables.holiday1),
-                    "holiday2": flattenValue(parsedVariables.variable_holiday2 || parsedVariables.holiday2)
+                    "holiday": flattenValue(
+                        (parsedVariables.variable_holiday1 || parsedVariables.holiday1 || '') +
+                        (parsedVariables.variable_holiday2 || parsedVariables.holiday2 || '')
+                    )
                 }
             };
 

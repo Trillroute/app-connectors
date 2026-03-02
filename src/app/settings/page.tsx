@@ -54,7 +54,7 @@ export default function SettingsPage() {
         GALLABOX_ENQUIRY_TEMPLATE: 'new_enquiry_alert',
         GALLABOX_TRIAL_CLASS_TEMPLATE: 'trial_class_booking_confirmation_no_profile',
         GALLABOX_ADMISSION_TEMPLATE: 'admission_confirmed_createnextapp2',
-        GALLABOX_POLICY_OVERVIEW_TEMPLATE: 'policy_overview_for_admission',
+        GALLABOX_POLICY_OVERVIEW_TEMPLATE: 'policy_overview_for_admission_createnextapp',
         AUTOMATION_EXOTEL_ENABLED: 'true',
         AUTOMATION_CODA_ENABLED: 'true',
         AUTOMATION_TRIAL_CLASS_ENABLED: 'true',
