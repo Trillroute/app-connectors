@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         const flattenValue = (val: any) => {
             const flat = Array.isArray(val) ? val.join(', ') : String(val || '');
             const trimmed = flat.trim();
-            return trimmed === '' ? '\u200B' : trimmed;
+            return trimmed === '' ? '-' : trimmed;
         };
 
         if (eventType === 'Enquiry') {
