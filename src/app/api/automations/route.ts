@@ -74,3 +74,34 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
+
+export async function PUT(request: Request) {
+    try {
+        const body = await request.json();
+        const { id, name, triggerEventType, gallaboxTemplateName, variableMappings, isActive } = body;
+
+        if (!id || !name || !triggerEventType || !gallaboxTemplateName) {
+            return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+        }
+
+        const dataToUpdate: any = {
+            name,
+            triggerEventType,
+            gallaboxTemplateName,
+            variableMappings: JSON.stringify(variableMappings || [])
+        };
+
+        if (isActive !== undefined) {
+            dataToUpdate.isActive = isActive;
+        }
+
+        const updated = await (prisma as any).customAutomation.update({
+            where: { id },
+            data: dataToUpdate
+        });
+
+        return NextResponse.json({ success: true, automation: updated });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}

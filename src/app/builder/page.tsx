@@ -22,6 +22,7 @@ export default function BuilderPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     const [isCreating, setIsCreating] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [triggerEventType, setTriggerEventType] = useState('');
     const [gallaboxTemplateName, setGallaboxTemplateName] = useState('');
@@ -73,24 +74,30 @@ export default function BuilderPage() {
         const filteredMappings = mappings.filter(m => m.templateVar.trim() && m.codaField.trim());
 
         try {
-            const res = await fetch('/api/automations', {
-                method: 'POST',
+            const isEditing = !!editingId;
+            const url = '/api/automations';
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const payload: any = {
+                name,
+                triggerEventType,
+                gallaboxTemplateName,
+                variableMappings: filteredMappings
+            };
+
+            if (isEditing) {
+                payload.id = editingId;
+            }
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name,
-                    triggerEventType,
-                    gallaboxTemplateName,
-                    variableMappings: filteredMappings
-                })
+                body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (data.success) {
                 // Reset Form
-                setIsCreating(false);
-                setName('');
-                setTriggerEventType('');
-                setGallaboxTemplateName('');
-                setMappings([{ templateVar: '', codaField: '' }]);
+                closeForm();
                 fetchAutomations();
             } else {
                 setError(data.error || 'Failed to save automation.');
@@ -98,6 +105,35 @@ export default function BuilderPage() {
         } catch (err: any) {
             setError(err.message);
         }
+    };
+
+    const handleEdit = (auto: CustomAutomation) => {
+        setIsCreating(true);
+        setEditingId(auto.id);
+        setName(auto.name);
+        setTriggerEventType(auto.triggerEventType);
+        setGallaboxTemplateName(auto.gallaboxTemplateName);
+        try {
+            const parsed = JSON.parse(auto.variableMappings);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                setMappings(parsed);
+            } else {
+                setMappings([{ templateVar: '', codaField: '' }]);
+            }
+        } catch (e) {
+            setMappings([{ templateVar: '', codaField: '' }]);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const closeForm = () => {
+        setIsCreating(false);
+        setEditingId(null);
+        setName('');
+        setTriggerEventType('');
+        setGallaboxTemplateName('');
+        setMappings([{ templateVar: '', codaField: '' }]);
+        setError(null);
     };
 
     const handleToggle = async (id: string, currentStatus: boolean) => {
@@ -148,8 +184,8 @@ export default function BuilderPage() {
                     ) : (
                         <div className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden p-6 ring-1 ring-black ring-opacity-5">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-gray-900">Configure Blueprint</h2>
-                                <button onClick={() => setIsCreating(false)} className="text-gray-400 hover:text-gray-600">
+                                <h2 className="text-xl font-bold text-gray-900">{editingId ? "Edit Blueprint" : "Configure Blueprint"}</h2>
+                                <button onClick={closeForm} className="text-gray-400 hover:text-gray-600">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
@@ -193,9 +229,12 @@ export default function BuilderPage() {
                                     </button>
                                 </div>
 
-                                <div className="mt-6 flex justify-end">
+                                <div className="mt-6 flex justify-end space-x-3">
+                                    <button onClick={closeForm} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2 px-6 rounded-lg transition shadow-sm">
+                                        Cancel
+                                    </button>
                                     <button onClick={handleSaveAutomation} className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition shadow-sm">
-                                        Deploy Blueprint
+                                        {editingId ? "Save Changes" : "Deploy Blueprint"}
                                     </button>
                                 </div>
                             </div>
@@ -248,7 +287,10 @@ export default function BuilderPage() {
                                                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${auto.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
-                                        <button onClick={() => handleDelete(auto.id)} className="text-gray-400 hover:text-red-500 transition">
+                                        <button onClick={() => handleEdit(auto)} className="text-gray-400 hover:text-indigo-500 transition" title="Edit Automation">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        </button>
+                                        <button onClick={() => handleDelete(auto.id)} className="text-gray-400 hover:text-red-500 transition" title="Delete Automation">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     </div>
