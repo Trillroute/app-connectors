@@ -16,17 +16,21 @@ function formatPayload(payloadStr: string) {
 export default async function DashboardPage() {
   const logs = await prisma.webhookLog.findMany({
     orderBy: { createdAt: 'desc' },
-    take: 50, // Get last 50 logs
+    take: 150, // Get last 150 logs
   });
 
-  const exotelLogs = logs.filter(l => l.source === 'exotel');
-  const codaLogs = logs.filter(l => l.source === 'coda');
-  const codaTrialLogs = logs.filter(l => l.source === 'coda-trial');
-  const codaAdmissionLogs = logs.filter(l => l.source === 'coda-admission');
-  const codaPolicyLogs = logs.filter(l => l.source === 'coda-policy');
-  const codaNewAccountLogs = logs.filter(l => l.source === 'coda-new-account');
-  const codaSyncDevLogs = logs.filter(l => l.source === 'coda-sync-dev');
-  const codaSyncLogs = logs.filter(l => l.source === 'coda-sync-student' || l.source === 'coda-sync-schedule');
+  const customAutomations = await (prisma as any).customAutomation.findMany({
+    orderBy: { createdAt: 'asc' }
+  });
+
+  const exotelLogs = logs.filter((l: any) => l.source === 'exotel');
+  const codaLogs = logs.filter((l: any) => l.source === 'coda');
+  const codaTrialLogs = logs.filter((l: any) => l.source === 'coda-trial');
+  const codaAdmissionLogs = logs.filter((l: any) => l.source === 'coda-admission');
+  const codaPolicyLogs = logs.filter((l: any) => l.source === 'coda-policy');
+  const codaNewAccountLogs = logs.filter((l: any) => l.source === 'coda-new-account');
+  const codaSyncDevLogs = logs.filter((l: any) => l.source === 'coda-sync-dev');
+  const codaSyncLogs = logs.filter((l: any) => l.source === 'coda-sync-student' || l.source === 'coda-sync-schedule');
 
   const settingsRecords = await prisma.settings.findMany({
     where: { key: { in: ['AUTOMATION_EXOTEL_ENABLED', 'AUTOMATION_CODA_ENABLED', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'AUTOMATION_ADMISSION_ENABLED', 'AUTOMATION_POLICY_OVERVIEW_ENABLED', 'AUTOMATION_NEW_ACCOUNT_ENABLED'] } }
@@ -558,6 +562,93 @@ export default async function DashboardPage() {
                 )}
               </div>
             </div>
+
+            {/* Custom Builder Automations */}
+            {customAutomations.map((customAuto: any) => {
+              const autoSlug = customAuto.name.replace(/\s+/g, '-').toLowerCase();
+              const autoLogs = logs.filter((l: any) => l.source === `coda-custom-${autoSlug}`);
+
+              return (
+                <div key={customAuto.id} className="bg-white rounded-xl shadow-sm border border-purple-200 overflow-hidden mt-8">
+                  {/* Automation Header */}
+                  <div className="px-6 py-5 border-b border-purple-100 flex items-center justify-between bg-purple-50/30">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-10 w-10 bg-purple-200 text-purple-700 rounded-lg flex items-center justify-center font-bold text-lg">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">{customAuto.name} <span className="text-xs ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full font-medium tracking-wide">CUSTOM BLUEPRINT</span></h3>
+                        <p className="text-sm text-gray-500">Event <span className="font-mono text-xs bg-gray-100 rounded px-1">{customAuto.triggerEventType}</span> &rarr; Gallabox Template <span className="font-mono text-xs bg-gray-100 rounded px-1">{customAuto.gallaboxTemplateName}</span></p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-sm font-medium text-gray-700">Status:</span>
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${customAuto.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {customAuto.isActive ? 'ACTIVE' : 'DISABLED'}
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
+                        {autoLogs.length} total runs
+                      </span>
+                    </div>
+                  </div>
+                  {/* Automation Logs / Activity */}
+                  <div className="bg-gray-50/50">
+                    {autoLogs.length === 0 ? (
+                      <div className="px-6 py-8 text-center text-sm text-gray-500">
+                        No activity recorded for this custom blueprint yet.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action / Error</th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Detailed Payload</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {autoLogs.map((log: WebhookLog) => (
+                              <tr key={log.id} className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${log.status === 'success' ? 'bg-green-100 text-green-800' :
+                                    log.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                      'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                    {log.status.toUpperCase()}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                  <span className="font-medium">{log.action || '-'}</span>
+                                  {log.error && <p className="text-xs text-red-600 mt-1 font-mono break-words">{log.error}</p>}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                  <details className="group cursor-pointer">
+                                    <summary className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold uppercase tracking-wide list-none flex items-center">
+                                      <svg className="w-4 h-4 mr-1 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                      View Data
+                                    </summary>
+                                    <div className="mt-3 p-3 bg-gray-900 rounded-lg text-xs overflow-x-auto text-green-400 font-mono shadow-inner border border-gray-800">
+                                      <pre>{formatPayload(log.payload)}</pre>
+                                    </div>
+                                  </details>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
 
             {/* Automation 4: Coda Schedule Database Sync */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
