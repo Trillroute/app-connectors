@@ -195,7 +195,7 @@ export async function POST(request: Request) {
         } else if (eventType === 'NewAccount') {
             await prisma.webhookLog.update({ where: { id: logEntry.id }, data: { source: 'coda-new-account' } });
 
-            const NEW_ACCOUNT_TEMPLATE = settingsMap['GALLABOX_NEW_ACCOUNT_TEMPLATE'] || 'new_account_created_createnextapp';
+            const NEW_ACCOUNT_TEMPLATE = settingsMap['GALLABOX_NEW_ACCOUNT_TEMPLATE'] || 'new_account_created_createnextapp_1';
             const IS_ENABLED = settingsMap['AUTOMATION_NEW_ACCOUNT_ENABLED'] !== 'false';
 
             if (!IS_ENABLED) {

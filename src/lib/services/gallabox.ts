@@ -22,6 +22,14 @@ export async function sendGallaboxMessage(templateName: string, recipientPhone: 
 
     const url = `https://server.gallabox.com/devapi/messages/whatsapp`;
 
+    // Carefully spread templateData to avoid nested bodyValues
+    let templatePayload: any = { templateName: templateName };
+    if (templateData.bodyValues) {
+        templatePayload.bodyValues = templateData.bodyValues;
+    } else if (Object.keys(templateData).length > 0) {
+        templatePayload.bodyValues = templateData;
+    }
+
     const requestBody = {
         channelId: channelId,
         channelType: 'whatsapp',
@@ -31,10 +39,7 @@ export async function sendGallaboxMessage(templateName: string, recipientPhone: 
         },
         whatsapp: {
             type: 'template',
-            template: {
-                templateName: templateName,
-                ...templateData
-            }
+            template: templatePayload
         }
     };
 
