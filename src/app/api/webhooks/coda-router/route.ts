@@ -232,16 +232,26 @@ export async function POST(request: Request) {
                 try {
                     const mappings = JSON.parse(customAuto.variableMappings || '[]');
                     const bodyValues: Record<string, string> = {};
+                    const buttonValues: Record<string, string[]> = {};
 
                     mappings.forEach((m: { templateVar: string; codaField: string }) => {
                         // Extract value from parsedVariables based on mapped Coda field key
                         const extracted = flattenValue(parsedVariables[m.codaField] || parsedVariables[`variable_${m.codaField}`] || parsedVariables[m.codaField.toLowerCase()]);
                         if (extracted) {
-                            bodyValues[m.templateVar] = extracted;
+                            // Check if the user is mapping to a Gallabox Button array parameter (e.g. button_0)
+                            if (m.templateVar.startsWith('button_')) {
+                                const index = m.templateVar.replace('button_', '');
+                                buttonValues[index] = [extracted];
+                            } else {
+                                bodyValues[m.templateVar] = extracted;
+                            }
                         }
                     });
 
-                    const templateData = { bodyValues };
+                    const templateData: any = { bodyValues };
+                    if (Object.keys(buttonValues).length > 0) {
+                        templateData.buttonValues = buttonValues;
+                    }
                     // Attempt to extract a generic name to appease the recipient struct requirement
                     const recipientName = flattenValue(parsedVariables.name || parsedVariables.studentName || parsedVariables.customerName || parsedVariables.variable_name) || 'Customer';
 

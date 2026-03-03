@@ -26,7 +26,12 @@ export async function sendGallaboxMessage(templateName: string, recipientPhone: 
     let templatePayload: any = { templateName: templateName };
     if (templateData.bodyValues) {
         templatePayload.bodyValues = templateData.bodyValues;
-    } else if (Object.keys(templateData).length > 0) {
+    }
+    if (templateData.buttonValues) {
+        templatePayload.buttonValues = templateData.buttonValues;
+    }
+
+    if (!templateData.bodyValues && !templateData.buttonValues && Object.keys(templateData).length > 0) {
         templatePayload.bodyValues = templateData;
     }
 
