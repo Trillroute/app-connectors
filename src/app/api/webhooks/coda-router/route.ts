@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     try {
         // Fetch Configuration Settings for all possible Coda endpoints
         const settings = await prisma.settings.findMany({
-            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'GALLABOX_ADMISSION_TEMPLATE', 'AUTOMATION_ADMISSION_ENABLED', 'GALLABOX_POLICY_OVERVIEW_TEMPLATE', 'AUTOMATION_POLICY_OVERVIEW_ENABLED'] } }
+            where: { key: { in: ['GALLABOX_ENQUIRY_TEMPLATE', 'AUTOMATION_CODA_ENABLED', 'GALLABOX_TRIAL_CLASS_TEMPLATE', 'AUTOMATION_TRIAL_CLASS_ENABLED', 'GALLABOX_ADMISSION_TEMPLATE', 'AUTOMATION_ADMISSION_ENABLED', 'GALLABOX_POLICY_OVERVIEW_TEMPLATE', 'AUTOMATION_POLICY_OVERVIEW_ENABLED', 'GALLABOX_NEW_ACCOUNT_TEMPLATE', 'AUTOMATION_NEW_ACCOUNT_ENABLED'] } }
         });
 
         const settingsMap = settings.reduce((acc: Record<string, string>, curr: { key: string; value: string }) => {
