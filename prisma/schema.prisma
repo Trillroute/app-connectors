@@ -66,3 +66,17 @@ model ScheduleEvent {
   studentId           String?
   student             StudentMaster?  @relation(fields: [studentId], references: [id])
 }
+
+model CustomAutomation {
+  id                    String   @id @default(cuid())
+  name                  String   // e.g., "Custom Reminder"
+  triggerEventType      String   @unique // Matches Coda's eventType payload (must be unique per trigger)
+  gallaboxTemplateName  String   // e.g., "reminder_notice_createnextapp"
+  isActive              Boolean  @default(true)
+  
+  // JSON string storing the mappings. E.g., [{"templateVar": "name", "codaField": "customer_name"}]
+  variableMappings      String?  
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}

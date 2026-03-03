@@ -221,9 +221,48 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, message: 'New Account processed and WhatsApp sent' });
 
         } else {
-            // Future unhandled event types just gracefully sit in the DB
-            await updateLog(logEntry.id, 'success', `Logged unsupported eventType: ${eventType}`);
-            return NextResponse.json({ success: true, message: `Event ${eventType} logged but no dispatcher configured` });
+            // Check if this eventType matches a Custom Automation from the UI Builder
+            const customAuto = await (prisma as any).customAutomation.findUnique({
+                where: { triggerEventType: eventType }
+            });
+
+            if (customAuto && customAuto.isActive) {
+                await prisma.webhookLog.update({ where: { id: logEntry.id }, data: { source: `coda-custom-${customAuto.name.replace(/\\s+/g, '-').toLowerCase()}` } });
+
+                try {
+                    const mappings = JSON.parse(customAuto.variableMappings || '[]');
+                    const bodyValues: Record<string, string> = {};
+
+                    mappings.forEach((m: { templateVar: string; codaField: string }) => {
+                        // Extract value from parsedVariables based on mapped Coda field key
+                        const extracted = flattenValue(parsedVariables[m.codaField] || parsedVariables[`variable_${m.codaField}`] || parsedVariables[m.codaField.toLowerCase()]);
+                        if (extracted) {
+                            bodyValues[m.templateVar] = extracted;
+                        }
+                    });
+
+                    const templateData = { bodyValues };
+                    // Attempt to extract a generic name to appease the recipient struct requirement
+                    const recipientName = flattenValue(parsedVariables.name || parsedVariables.studentName || parsedVariables.customerName || parsedVariables.variable_name) || 'Customer';
+
+                    const gallaboxResult = await sendGallaboxMessage(customAuto.gallaboxTemplateName, formattedNumber, recipientName, templateData);
+
+                    if (!gallaboxResult.success) {
+                        await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
+                        return NextResponse.json({ success: false, error: gallaboxResult.error });
+                    }
+
+                    await updateLog(logEntry.id, 'success', `Gallabox Custom Auto Details Sent: ${customAuto.name}`, payload, gallaboxResult.payloadSent);
+                    return NextResponse.json({ success: true, message: `Custom Automation [${customAuto.name}] processed successfully` });
+                } catch (mapErr: any) {
+                    await updateLog(logEntry.id, 'failed', `Custom Mapping Extraction Parse Error: ${mapErr.message}`, payload);
+                    return NextResponse.json({ success: false, error: `Custom Auto JSON Exception: ${mapErr.message}` });
+                }
+            } else {
+                // Future unhandled event types just gracefully sit in the DB
+                await updateLog(logEntry.id, 'success', `Logged unsupported eventType: ${eventType}`);
+                return NextResponse.json({ success: true, message: `Event ${eventType} logged but no dispatcher configured` });
+            }
         }
 
     } catch (error: any) {
