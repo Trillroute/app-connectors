@@ -232,7 +232,7 @@ export async function POST(request: Request) {
                 try {
                     const mappings = JSON.parse(customAuto.variableMappings || '[]');
                     const bodyValues: Record<string, string> = {};
-                    const buttonValues: Record<string, string[]> = {};
+                    const buttonValues: any[] = [];
 
                     mappings.forEach((m: { templateVar: string; codaField: string }) => {
                         // Extract value from parsedVariables based on mapped Coda field key
@@ -241,7 +241,14 @@ export async function POST(request: Request) {
                             // Check if the user is mapping to a Gallabox Button array parameter (e.g. button_0)
                             if (m.templateVar.startsWith('button_')) {
                                 const index = m.templateVar.replace('button_', '');
-                                buttonValues[index] = [extracted];
+                                buttonValues.push({
+                                    index: parseInt(index, 10),
+                                    sub_type: "url",
+                                    parameters: {
+                                        type: "text",
+                                        text: extracted
+                                    }
+                                });
                             } else {
                                 bodyValues[m.templateVar] = extracted;
                             }
@@ -249,7 +256,7 @@ export async function POST(request: Request) {
                     });
 
                     const templateData: any = { bodyValues };
-                    if (Object.keys(buttonValues).length > 0) {
+                    if (buttonValues.length > 0) {
                         templateData.buttonValues = buttonValues;
                     }
                     // Attempt to extract a generic name to appease the recipient struct requirement
