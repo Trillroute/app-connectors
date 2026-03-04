@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { WebhookLog } from '@prisma/client';
+import Link from 'next/link';
 import AutomationToggle from '@/components/AutomationToggle';
 
 export const dynamic = 'force-dynamic';
@@ -59,8 +60,14 @@ export default async function DashboardPage() {
               Central Hub for your Business Automations
             </p>
           </div>
-          <div className="flex space-x-3">
-            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+          <div className="flex space-x-3 items-center">
+            <Link href="/builder" className="inline-flex items-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-colors">
+              <svg className="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+              </svg>
+              Builder Studio
+            </Link>
+            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-sm font-medium text-green-700 ring-1 ring-inset ring-green-600/20 h-fit">
               Server Online
             </span>
           </div>

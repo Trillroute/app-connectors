@@ -227,7 +227,7 @@ export async function POST(request: Request) {
             });
 
             if (customAuto && customAuto.isActive) {
-                await prisma.webhookLog.update({ where: { id: logEntry.id }, data: { source: `coda-custom-${customAuto.name.replace(/\\s+/g, '-').toLowerCase()}` } });
+                await prisma.webhookLog.update({ where: { id: logEntry.id }, data: { source: `coda-custom-${customAuto.name.replace(/\s+/g, '-').toLowerCase()}` } });
 
                 try {
                     const mappings = JSON.parse(customAuto.variableMappings || '[]');
