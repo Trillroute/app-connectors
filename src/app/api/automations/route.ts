@@ -17,16 +17,21 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, triggerEventType, gallaboxTemplateName, variableMappings, isActive } = body;
+        const { name, triggerEventType, actionType, gallaboxTemplateName, variableMappings, isActive } = body;
 
-        if (!name || !triggerEventType || !gallaboxTemplateName) {
-            return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+        if (!name || !triggerEventType) {
+            return NextResponse.json({ success: false, error: 'Missing required core fields' }, { status: 400 });
+        }
+
+        if (actionType !== 'exotel_call' && !gallaboxTemplateName) {
+            return NextResponse.json({ success: false, error: 'Gallabox Template Name is required for message actions.' }, { status: 400 });
         }
 
         const newAutomation = await (prisma as any).customAutomation.create({
             data: {
                 name,
                 triggerEventType,
+                actionType: actionType || 'gallabox_message',
                 gallaboxTemplateName,
                 variableMappings: JSON.stringify(variableMappings || []),
                 isActive: isActive !== undefined ? isActive : true
@@ -78,15 +83,20 @@ export async function PATCH(request: Request) {
 export async function PUT(request: Request) {
     try {
         const body = await request.json();
-        const { id, name, triggerEventType, gallaboxTemplateName, variableMappings, isActive } = body;
+        const { id, name, triggerEventType, actionType, gallaboxTemplateName, variableMappings, isActive } = body;
 
-        if (!id || !name || !triggerEventType || !gallaboxTemplateName) {
-            return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+        if (!id || !name || !triggerEventType) {
+            return NextResponse.json({ success: false, error: 'Missing required core fields' }, { status: 400 });
+        }
+
+        if (actionType !== 'exotel_call' && !gallaboxTemplateName) {
+            return NextResponse.json({ success: false, error: 'Gallabox Template Name is required for message actions.' }, { status: 400 });
         }
 
         const dataToUpdate: any = {
             name,
             triggerEventType,
+            actionType: actionType || 'gallabox_message',
             gallaboxTemplateName,
             variableMappings: JSON.stringify(variableMappings || [])
         };
