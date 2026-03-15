@@ -54,13 +54,6 @@ export async function POST(request: Request) {
             return acc;
         }, {} as Record<string, string>);
 
-        if (!phone) {
-            await updateLog(logEntry.id, 'failed', 'Missing "phone" in Coda JSON payload');
-            return NextResponse.json({ success: false, error: 'Missing phone number' }, { status: 400 });
-        }
-
-        const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
-
         // === ROUTING LOGIC ===
         const flattenValue = (val: any) => {
             const flat = Array.isArray(val) ? val.join(', ') : String(val || '');
@@ -69,6 +62,12 @@ export async function POST(request: Request) {
         };
 
         if (eventType === 'Enquiry') {
+            if (!phone) {
+                await updateLog(logEntry.id, 'failed', 'Missing "phone" in Coda JSON payload');
+                return NextResponse.json({ success: false, error: 'Missing phone number' }, { status: 400 });
+            }
+            const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
+
             const ENQUIRY_TEMPLATE = settingsMap['GALLABOX_ENQUIRY_TEMPLATE'] || 'new_enquiry_alert';
             const IS_ENABLED = settingsMap['AUTOMATION_CODA_ENABLED'] !== 'false';
 
@@ -95,6 +94,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, message: 'Enquiry processed and WhatsApp sent' });
 
         } else if (eventType === 'TrialBooking' || eventType === 'Trial Booking Confirmation') {
+            if (!phone) {
+                await updateLog(logEntry.id, 'failed', 'Missing "phone" in Coda JSON payload');
+                return NextResponse.json({ success: false, error: 'Missing phone number' }, { status: 400 });
+            }
+            const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
+
             const TRIAL_TEMPLATE = settingsMap['GALLABOX_TRIAL_CLASS_TEMPLATE'] || 'trial_class_booking_confirmation_no_profile';
             const IS_ENABLED = settingsMap['AUTOMATION_TRIAL_CLASS_ENABLED'] !== 'false';
 
@@ -126,6 +131,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, message: 'Trial Class processed and WhatsApp sent' });
 
         } else if (eventType === 'AdmissionConfirmation') {
+            if (!phone) {
+                await updateLog(logEntry.id, 'failed', 'Missing "phone" in Coda JSON payload');
+                return NextResponse.json({ success: false, error: 'Missing phone number' }, { status: 400 });
+            }
+            const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
+
             const ADMISSION_TEMPLATE = settingsMap['GALLABOX_ADMISSION_TEMPLATE'] || 'admission_sales_tracker_v4';
             const IS_ENABLED = settingsMap['AUTOMATION_ADMISSION_ENABLED'] !== 'false';
 
@@ -160,6 +171,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, message: 'Admission Confirmation processed and WhatsApp sent' });
 
         } else if (eventType === 'PolicyOverview') {
+            if (!phone) {
+                await updateLog(logEntry.id, 'failed', 'Missing "phone" in Coda JSON payload');
+                return NextResponse.json({ success: false, error: 'Missing phone number' }, { status: 400 });
+            }
+            const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
+
             const POLICY_TEMPLATE = settingsMap['GALLABOX_POLICY_OVERVIEW_TEMPLATE'] || 'policy_overview_for_admission';
             const IS_ENABLED = settingsMap['AUTOMATION_POLICY_OVERVIEW_ENABLED'] !== 'false';
 
@@ -194,6 +211,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, message: 'Policy Overview processed and WhatsApp sent' });
 
         } else if (eventType === 'NewAccount') {
+            if (!phone) {
+                await updateLog(logEntry.id, 'failed', 'Missing "phone" in Coda JSON payload');
+                return NextResponse.json({ success: false, error: 'Missing phone number' }, { status: 400 });
+            }
+            const formattedNumber = phone.startsWith('+') ? phone : `+91${phone}`;
+
             await prisma.webhookLog.update({ where: { id: logEntry.id }, data: { source: 'coda-new-account' } });
 
             const NEW_ACCOUNT_TEMPLATE = settingsMap['GALLABOX_NEW_ACCOUNT_TEMPLATE'] || 'new_account_created_createnextapp_1';
