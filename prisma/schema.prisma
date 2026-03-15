@@ -71,7 +71,8 @@ model CustomAutomation {
   id                    String   @id @default(cuid())
   name                  String   // e.g., "Custom Reminder"
   triggerEventType      String   @unique // Matches Coda's eventType payload (must be unique per trigger)
-  gallaboxTemplateName  String   // e.g., "reminder_notice_createnextapp"
+  actionType            String   @default("gallabox_message") // 'gallabox_message' or 'exotel_call'
+  gallaboxTemplateName  String?  // e.g., "reminder_notice_createnextapp" (Optional for Exotel)
   isActive              Boolean  @default(true)
   
   // JSON string storing the mappings. E.g., [{"templateVar": "name", "codaField": "customer_name"}]

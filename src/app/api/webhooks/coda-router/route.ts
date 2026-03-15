@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendGallaboxMessage } from '@/lib/services/gallabox';
+import { makeExotelCall } from '@/lib/services/exotel';
 
 export async function POST(request: Request) {
     let payload;
@@ -259,21 +260,53 @@ export async function POST(request: Request) {
                     if (buttonValues.length > 0) {
                         templateData.buttonValues = buttonValues;
                     }
-                    // Attempt to extract a generic name to appease the recipient struct requirement
-                    const recipientName = flattenValue(parsedVariables.name || parsedVariables.studentName || parsedVariables.customerName || parsedVariables.variable_name) || 'Customer';
+                    if (customAuto.actionType === 'exotel_call') {
+                        // For Exotel, we expect 'From', 'To', and 'CallerId' to be mapped in bodyValues
+                        const from = bodyValues['From'] || bodyValues['from'];
+                        const to = bodyValues['To'] || bodyValues['to'];
+                        const callerId = bodyValues['CallerId'] || bodyValues['callerId'] || bodyValues['callerid'];
 
-                    const gallaboxResult = await sendGallaboxMessage(customAuto.gallaboxTemplateName, formattedNumber, recipientName, templateData);
+                        if (!from || !to || !callerId) {
+                            throw new Error(`Exotel Call requires 'From', 'To', and 'CallerId' variable mappings. Found: ${JSON.stringify(bodyValues)}`);
+                        }
 
-                    if (!gallaboxResult.success) {
-                        await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
-                        return NextResponse.json({ success: false, error: gallaboxResult.error });
+                        // Dispatch to Exotel
+                        const response = await makeExotelCall(from, to, callerId);
+
+                        await prisma.webhookLog.update({
+                            where: { id: logEntry.id },
+                            data: {
+                                status: 'success',
+                                action: `Connected Exotel Call: ${from} -> ${to}`,
+                                payload: JSON.stringify({ codaPayload: bodyValues, exotelPlatformResponse: response })
+                            }
+                        });
+                        return NextResponse.json({ success: true, message: 'Custom Exotel Call Automation Dispatched successfully.' });
+
+                    } else {
+                        // Default to Gallabox Message Execution
+                        // Attempt to extract a generic name to appease the recipient struct requirement
+                        const recipientName = flattenValue(parsedVariables['studentName'] || parsedVariables['customerName'] || parsedVariables['name'] || "Customer");
+                        const recipientPhone = flattenValue(parsedVariables['whatsappContact'] || parsedVariables['phone'] || parsedVariables['phoneNumber']);
+
+                        if (!recipientPhone) {
+                            throw new Error("Phone number mapping not found in payload for Gallabox Message. E.g. Missing `whatsappContact` or `phone` key in root mapping block.");
+                        }
+
+                        // Dispatch to Gallabox
+                        const gallaboxResult = await sendGallaboxMessage(customAuto.gallaboxTemplateName, recipientPhone, recipientName, templateData);
+
+                        if (!gallaboxResult.success) {
+                            await updateLog(logEntry.id, 'failed', `Gallabox Error: ${gallaboxResult.error}`, payload, gallaboxResult.payloadSent);
+                            return NextResponse.json({ success: false, error: gallaboxResult.error });
+                        }
+
+                        await updateLog(logEntry.id, 'success', `Gallabox Custom Auto Details Sent: ${customAuto.name}`, payload, gallaboxResult.payloadSent);
+                        return NextResponse.json({ success: true, message: `Custom Automation [${customAuto.name}] processed successfully` });
                     }
-
-                    await updateLog(logEntry.id, 'success', `Gallabox Custom Auto Details Sent: ${customAuto.name}`, payload, gallaboxResult.payloadSent);
-                    return NextResponse.json({ success: true, message: `Custom Automation [${customAuto.name}] processed successfully` });
-                } catch (mapErr: any) {
-                    await updateLog(logEntry.id, 'failed', `Custom Mapping Extraction Parse Error: ${mapErr.message}`, payload);
-                    return NextResponse.json({ success: false, error: `Custom Auto JSON Exception: ${mapErr.message}` });
+                } catch (error: any) {
+                    await updateLog(logEntry.id, 'failed', `Custom Mapping Extraction Parse Error: ${error.message}`, payload);
+                    return NextResponse.json({ success: false, error: `Custom Auto JSON Exception: ${error.message}` });
                 }
             } else {
                 // Future unhandled event types just gracefully sit in the DB

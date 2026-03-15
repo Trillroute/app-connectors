@@ -11,6 +11,7 @@ type CustomAutomation = {
     id: string;
     name: string;
     triggerEventType: string;
+    actionType: string;
     gallaboxTemplateName: string;
     isActive: boolean;
     variableMappings: string;
@@ -25,6 +26,7 @@ export default function BuilderPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [triggerEventType, setTriggerEventType] = useState('');
+    const [actionType, setActionType] = useState('gallabox_message');
     const [gallaboxTemplateName, setGallaboxTemplateName] = useState('');
     const [mappings, setMappings] = useState<VariableMapping[]>([{ templateVar: '', codaField: '' }]);
     const [error, setError] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export default function BuilderPage() {
 
     const handleSaveAutomation = async () => {
         setError(null);
-        if (!name || !triggerEventType || !gallaboxTemplateName) {
+        if (!name || !triggerEventType || (actionType === 'gallabox_message' && !gallaboxTemplateName)) {
             setError('Please fill out all required core fields.');
             return;
         }
@@ -81,7 +83,8 @@ export default function BuilderPage() {
             const payload: any = {
                 name,
                 triggerEventType,
-                gallaboxTemplateName,
+                actionType,
+                gallaboxTemplateName: actionType === 'exotel_call' ? null : gallaboxTemplateName,
                 variableMappings: filteredMappings
             };
 
@@ -112,7 +115,8 @@ export default function BuilderPage() {
         setEditingId(auto.id);
         setName(auto.name);
         setTriggerEventType(auto.triggerEventType);
-        setGallaboxTemplateName(auto.gallaboxTemplateName);
+        setActionType(auto.actionType || 'gallabox_message');
+        setGallaboxTemplateName(auto.gallaboxTemplateName || '');
         try {
             const parsed = JSON.parse(auto.variableMappings);
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -131,6 +135,7 @@ export default function BuilderPage() {
         setEditingId(null);
         setName('');
         setTriggerEventType('');
+        setActionType('gallabox_message');
         setGallaboxTemplateName('');
         setMappings([{ templateVar: '', codaField: '' }]);
         setError(null);
@@ -204,14 +209,29 @@ export default function BuilderPage() {
                                         <p className="text-xs text-gray-500 mt-1">This is the string your Coda button must emit as its eventType.</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Gallabox WhatsApp Template</label>
-                                        <input value={gallaboxTemplateName} onChange={e => setGallaboxTemplateName(e.target.value)} type="text" placeholder="e.g. workshop_reminder" className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Platform Action</label>
+                                        <select value={actionType} onChange={e => setActionType(e.target.value)} className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white">
+                                            <option value="gallabox_message">Gallabox WhatsApp Template</option>
+                                            <option value="exotel_call">Exotel Outbound Call</option>
+                                        </select>
                                     </div>
+                                    {actionType === 'gallabox_message' && (
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Gallabox WhatsApp Template</label>
+                                            <input value={gallaboxTemplateName} onChange={e => setGallaboxTemplateName(e.target.value)} type="text" placeholder="e.g. workshop_reminder" className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-200 mt-6">
                                     <h3 className="text-md font-medium text-gray-900 mb-1">Dynamic Variables Mapping</h3>
-                                    <p className="text-xs text-gray-500 mb-4">Map the incoming Coda keys (e.g. `studentName`) directly to the WhatsApp Template Variable expectations (e.g. `name`).</p>
+                                    {actionType === 'exotel_call' ? (
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                                            <p className="text-sm text-yellow-800">For Exotel Calls, you must map three exact **Template Parameters**: <code className="bg-yellow-100 px-1 rounded">From</code> (Admin's phone), <code className="bg-yellow-100 px-1 rounded">To</code> (Student's phone), and <code className="bg-yellow-100 px-1 rounded">CallerId</code> (Your ExoPhone Number).</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-gray-500 mb-4">Map the incoming Coda keys (e.g. `studentName`) directly to the WhatsApp Template Variable expectations (e.g. `name`).</p>
+                                    )}
 
                                     {mappings.map((mapping, idx) => (
                                         <div key={idx} className="flex space-x-3 mb-3 items-center">
@@ -260,7 +280,12 @@ export default function BuilderPage() {
                                                 {auto.triggerEventType}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-500 font-mono text-xs">{auto.gallaboxTemplateName}</p>
+                                        <p className="text-sm text-gray-500 font-mono text-xs mt-1">
+                                            <span className={`inline-block mr-2 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${auto.actionType === 'exotel_call' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                                                {auto.actionType === 'exotel_call' ? 'EXOTEL CALL' : 'GALLABOX'}
+                                            </span>
+                                            {auto.actionType === 'exotel_call' ? 'Outbound Dial' : auto.gallaboxTemplateName}
+                                        </p>
                                         <div className="mt-3 flex space-x-2">
                                             {(() => {
                                                 try {
